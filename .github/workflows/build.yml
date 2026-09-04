@@ -1,34 +1,42 @@
 name: Build Flutter APK
 
-on:
+"on":
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download project
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract ZIP
+      - name: Extract Flutter project
         run: |
-          unzip -q MORRE_Flutter_Android_Ready.zip -d extracted
-          echo "PROJECT_DIR=extracted/MORRE_Flutter_Android_Ready" >> $GITHUB_ENV
+          unzip -q "MORRE_Flutter_Android_Ready.zip" -d extracted
+          PROJECT_DIR=$(find extracted -name pubspec.yaml -type f -print -quit | xargs dirname)
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+          echo "Project found at: $PROJECT_DIR"
 
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: stable
           channel: stable
+          cache: true
 
-      - name: Get packages
+      - name: Flutter doctor
+        run: flutter doctor -v
+
+      - name: Get dependencies
         working-directory: ${{ env.PROJECT_DIR }}
         run: flutter pub get
 
@@ -40,4 +48,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MORRE-APK
-          path: extracted/MORRE_Flutter_Android_Ready/build/app/outputs/flutter-apk/app-debug.apk
+          path: ${{ env.PROJECT_DIR }}/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
