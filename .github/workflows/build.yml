@@ -33,8 +33,11 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Flutter doctor
-        run: flutter doctor -v
+      - name: Upgrade Gradle
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          sed -i 's#gradle-[0-9.]*-bin.zip#gradle-8.14-bin.zip#' android/gradle/wrapper/gradle-wrapper.properties
+          cat android/gradle/wrapper/gradle-wrapper.properties
 
       - name: Get dependencies
         working-directory: ${{ env.PROJECT_DIR }}
